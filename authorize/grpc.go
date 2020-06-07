@@ -254,31 +254,25 @@ func getForwardAuthVerifyURL(req *envoy_service_auth_v2.CheckRequest) *url.URL  
 		return verifyURL
 	}
 
-	verifyURL, err := getForwardAuthFromHeaders(req) 
-	if err != nil {
-		return verifyURL
-	}
-
-	return nil
+	return getForwardAuthFromHeaders(req) 
 }
 
 func getForwardAuthFromHeaders(req *envoy_service_auth_v2.CheckRequest) *url.URL {
 	headers := getCheckRequestHeaders(req)
 	fwdProto, err := headers["x-forwarded-proto"]
 	if err != nil {
-		return nil, err
+		return nil
 	}
 	fwdHost, err := headers["x-forwarded-host"]
 	if err != nil {
-		return nil, err
+		return nil
 	}
 	fwdPath, err := headers["x-forwarded-uri"]
 	if err != nil {
-		return nil, err
+		return nil
 	}
 
-	u := url.URL{Proto: fwdProto, Host: fwdHost, Path: fwdPath}
-	return u
+	return url.URL{Proto: fwdProto, Host: fwdHost, Path: fwdPath}
 }
 
 // getPeerCertificate gets the PEM-encoded peer certificate from the check request
