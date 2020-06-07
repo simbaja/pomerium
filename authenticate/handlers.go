@@ -56,6 +56,7 @@ func (a *Authenticate) Mount(r *mux.Router) {
 	v := r.PathPrefix("/.pomerium").Subrouter()
 	c := cors.New(cors.Options{
 		AllowOriginRequestFunc: func(r *http.Request, _ string) bool {
+			log.Debug().Str("url", r.URL.String()).Str("absUrl", urlutil.GetAbsoluteURL(r)).Msg("authenticate: signing request")
 			err := middleware.ValidateRequestURL(r, a.sharedKey)
 			if err != nil {
 				log.FromRequest(r).Info().Err(err).Msg("authenticate: origin blocked")
