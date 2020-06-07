@@ -168,12 +168,8 @@ func (a *Authorize) handleForwardAuth(req *envoy_service_auth_v2.CheckRequest) b
 
 	checkURL := getCheckRequestURL(req)
 	if urlutil.StripPort(checkURL.Host) == urlutil.StripPort(opts.GetForwardAuthURL().Host) {
-		if (checkURL.Path == "/" || checkURL.Path == "/verify") && checkURL.Query().Get("uri") != "" {
-			verifyURL, err := url.Parse(checkURL.Query().Get("uri"))
-			if err != nil {
-				log.Warn().Str("uri", checkURL.Query().Get("uri")).Err(err).Msg("failed to parse uri for forward authentication")
-				return false
-			}
+		verifyURL := getForwardAuthVerifyURL(req)
+		if (verifyURL != nil) {
 			req.Attributes.Request.Http.Scheme = verifyURL.Scheme
 			req.Attributes.Request.Http.Host = verifyURL.Host
 			req.Attributes.Request.Http.Path = verifyURL.Path
@@ -243,6 +239,45 @@ func getCheckRequestURL(req *envoy_service_auth_v2.CheckRequest) *url.URL {
 			u.Scheme = fwdProto
 		}
 	}
+	return u
+}
+
+func getForwardAuthVerifyURL(req *envoy_service_auth_v2.CheckRequest) *url.URL  {
+	checkURL := getCheckRequestURL(req)
+
+	if (checkURL.Path == "/" || checkURL.Path == "/verify") && checkURL.Query().Get("uri") != "" {
+		verifyURL, err := url.Parse(checkURL.Query().Get("uri"))
+		if err != nil {
+			log.Warn().Str("uri", checkURL.Query().Get("uri")).Err(err).Msg("failed to parse uri for forward authentication")
+			return nil
+		}
+		return verifyURL
+	}
+
+	verifyURL, err := getForwardAuthFromHeaders(req) 
+	if err != nil {
+		return verifyURL
+	}
+
+	return nil
+}
+
+func getForwardAuthFromHeaders(req *envoy_service_auth_v2.CheckRequest) *url.URL {
+	headers := getCheckRequestHeaders(req)
+	fwdProto, err := headers["x-forwarded-proto"]
+	if err != nil {
+		return nil, err
+	}
+	fwdHost, err := headers["x-forwarded-host"]
+	if err != nil {
+		return nil, err
+	}
+	fwdPath, err := headers["x-forwarded-uri"]
+	if err != nil {
+		return nil, err
+	}
+
+	u := url.URL{Proto: fwdProto, Host: fwdHost, Path: fwdPath}
 	return u
 }
 
