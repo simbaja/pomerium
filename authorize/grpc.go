@@ -169,7 +169,7 @@ func (a *Authorize) handleForwardAuth(req *envoy_service_auth_v2.CheckRequest) b
 	checkURL := getCheckRequestURL(req)
 	if urlutil.StripPort(checkURL.Host) == urlutil.StripPort(opts.GetForwardAuthURL().Host) {
 		verifyURL := getForwardAuthVerifyURL(req)
-		if (verifyURL != nil) {
+		if verifyURL != nil {
 			req.Attributes.Request.Http.Scheme = verifyURL.Scheme
 			req.Attributes.Request.Http.Host = verifyURL.Host
 			req.Attributes.Request.Http.Path = verifyURL.Path
@@ -242,7 +242,7 @@ func getCheckRequestURL(req *envoy_service_auth_v2.CheckRequest) *url.URL {
 	return u
 }
 
-func getForwardAuthVerifyURL(req *envoy_service_auth_v2.CheckRequest) *url.URL  {
+func getForwardAuthVerifyURL(req *envoy_service_auth_v2.CheckRequest) *url.URL {
 	checkURL := getCheckRequestURL(req)
 
 	if (checkURL.Path == "/" || checkURL.Path == "/verify") && checkURL.Query().Get("uri") != "" {
@@ -254,13 +254,13 @@ func getForwardAuthVerifyURL(req *envoy_service_auth_v2.CheckRequest) *url.URL  
 		return verifyURL
 	}
 
-	return getForwardAuthFromHeaders(req) 
+	return getForwardAuthFromHeaders(req)
 }
 
 func getForwardAuthFromHeaders(req *envoy_service_auth_v2.CheckRequest) *url.URL {
 	http := req.GetAttributes().GetRequest().GetHttp()
 	headers := http.GetHeaders()
-	if  h != nil {
+	if headers != nil {
 		fwdProto, ok := headers["x-forwarded-proto"]
 		if !ok {
 			return nil
@@ -270,13 +270,15 @@ func getForwardAuthFromHeaders(req *envoy_service_auth_v2.CheckRequest) *url.URL
 			return nil
 		}
 		fwdPath, ok := headers["x-forwarded-uri"]
-		if err != nil {
+		if !ok {
 			return nil
 		}
+
+		u := url.URL{Scheme: fwdProto, Host: fwdHost, Path: fwdPath}
+		return &u
 	}
 
-	u := url.URL{Scheme: fwdProto, Host: fwdHost, Path: fwdPath}
-	return u
+	return nil
 }
 
 // getPeerCertificate gets the PEM-encoded peer certificate from the check request
