@@ -274,8 +274,7 @@ func getForwardAuthFromHeaders(req *envoy_service_auth_v2.CheckRequest) *url.URL
 			return nil
 		}
 
-		u := url.URL{Scheme: fwdProto, Host: fwdHost, Path: fwdPath}
-		return &u
+		return &url.URL{Scheme: fwdProto, Host: fwdHost, Path: fwdPath}
 	}
 
 	return nil
