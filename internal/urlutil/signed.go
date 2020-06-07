@@ -65,12 +65,12 @@ func (su *SignedURL) Validate() error {
 
 	issued, err := newNumericDateFromString(params.Get(QueryHmacIssued))
 	if err != nil {
-		return err
+		return "issued: " + err + " found: " + params.Get(QueryHmacIssued)
 	}
 
 	expiry, err := newNumericDateFromString(params.Get(QueryHmacExpiry))
 	if err != nil {
-		return err
+		return "expiry: " + err + " found: " + params.Get(QueryHmacExpiry)
 	}
 
 	if expiry != nil && now.Add(-DefaultLeeway).After(expiry.Time()) {
