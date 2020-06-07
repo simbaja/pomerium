@@ -168,6 +168,36 @@ func (a *Authorize) handleForwardAuth(req *envoy_service_auth_v2.CheckRequest) b
 
 	checkURL := getCheckRequestURL(req)
 	if urlutil.StripPort(checkURL.Host) == urlutil.StripPort(opts.GetForwardAuthURL().Host) {
+		if (checkURL.Path == "/" || checkURL.Path == "/verify") && checkURL.Query().Get("uri") != "" {
+			verifyURL, err := url.Parse(checkURL.Query().Get("uri"))
+			if err != nil {
+				log.Warn().Str("uri", checkURL.Query().Get("uri")).Err(err).Msg("failed to parse uri for forward authentication")
+				return false
+			}
+			req.Attributes.Request.Http.Scheme = verifyURL.Scheme
+			req.Attributes.Request.Http.Host = verifyURL.Host
+			req.Attributes.Request.Http.Path = verifyURL.Path
+			// envoy sends the query string as part of the path
+			if verifyURL.RawQuery != "" {
+				req.Attributes.Request.Http.Path += "?" + verifyURL.RawQuery
+			}
+			return true
+		}
+	}
+
+	return false
+}
+
+/*
+func (a *Authorize) handleForwardAuth(req *envoy_service_auth_v2.CheckRequest) bool {
+	opts := a.currentOptions.Load()
+
+	if opts.ForwardAuthURL == nil {
+		return false
+	}
+
+	checkURL := getCheckRequestURL(req)
+	if urlutil.StripPort(checkURL.Host) == urlutil.StripPort(opts.GetForwardAuthURL().Host) {
 		verifyURL := getForwardAuthVerifyURL(req)
 		if verifyURL != nil {
 			req.Attributes.Request.Http.Scheme = verifyURL.Scheme
@@ -183,6 +213,7 @@ func (a *Authorize) handleForwardAuth(req *envoy_service_auth_v2.CheckRequest) b
 
 	return false
 }
+*/
 
 func getEvaluatorRequestFromCheckRequest(in *envoy_service_auth_v2.CheckRequest, rawJWT []byte) *evaluator.Request {
 	requestURL := getCheckRequestURL(in)
