@@ -132,12 +132,13 @@ type Options struct {
 
 	// Identity provider configuration variables as specified by RFC6749
 	// https://openid.net/specs/openid-connect-basic-1_0.html#RFC6749
-	ClientID       string   `mapstructure:"idp_client_id" yaml:"idp_client_id,omitempty"`
-	ClientSecret   string   `mapstructure:"idp_client_secret" yaml:"idp_client_secret,omitempty"`
-	Provider       string   `mapstructure:"idp_provider" yaml:"idp_provider,omitempty"`
-	ProviderURL    string   `mapstructure:"idp_provider_url" yaml:"idp_provider_url,omitempty"`
-	Scopes         []string `mapstructure:"idp_scopes" yaml:"idp_scopes,omitempty"`
-	ServiceAccount string   `mapstructure:"idp_service_account" yaml:"idp_service_account,omitempty"`
+	ClientID                string   `mapstructure:"idp_client_id" yaml:"idp_client_id,omitempty"`
+	ClientSecret            string   `mapstructure:"idp_client_secret" yaml:"idp_client_secret,omitempty"`
+	Provider                string   `mapstructure:"idp_provider" yaml:"idp_provider,omitempty"`
+	ProviderURL             string   `mapstructure:"idp_provider_url" yaml:"idp_provider_url,omitempty"`
+	Scopes                  []string `mapstructure:"idp_scopes" yaml:"idp_scopes,omitempty"`
+	ServiceAccount          string   `mapstructure:"idp_service_account" yaml:"idp_service_account,omitempty"`
+	EndSessionRedirectParam string   `mapstructure:"idp_end_session_redirect_param" yaml:"idp_end_session_redirect_param,omitempty"`
 
 	// Administrators contains a set of emails with users who have super user
 	// (sudo) access including the ability to impersonate other users' access

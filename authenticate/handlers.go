@@ -288,10 +288,10 @@ func (a *Authenticate) SignOut(w http.ResponseWriter, r *http.Request) error {
 	// no matter what happens, we want to clear the session store
 	a.sessionStore.ClearSession(w, r)
 	redirectString := r.FormValue(urlutil.QueryRedirectURI)
-	endSessionURL, err := a.provider.LogOut()
+	endSessionURL, endSessionRedirectParam, err := a.provider.LogOut()
 	if err == nil {
 		params := url.Values{}
-		params.Add("post_logout_redirect_uri", redirectString)
+		params.Add(endSessionRedirectParam, redirectString)
 		endSessionURL.RawQuery = params.Encode()
 		redirectString = endSessionURL.String()
 	} else if !errors.Is(err, oidc.ErrSignoutNotImplemented) {

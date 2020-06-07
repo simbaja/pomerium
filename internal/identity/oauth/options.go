@@ -26,6 +26,9 @@ type Options struct {
 	// Scope specifies optional requested permissions.
 	Scopes []string
 
+	// The parameter to use with the end session endpoint
+	EndSessionRedirectParam string
+
 	// ServiceAccount can be set for those providers that require additional
 	// credentials or tokens to do follow up API calls (e.g. Google)
 	ServiceAccount string
