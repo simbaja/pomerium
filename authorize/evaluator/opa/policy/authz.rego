@@ -33,6 +33,14 @@ allow {
 	count(deny)==0
 }
 
+# allow by user
+allow {
+	route := first_allowed_route(input.url)
+	token.payload.user = route_policies[route].allowed_users[_]
+	token.valid
+	count(deny)==0
+}
+
 # allow group
 allow {
 	route := first_allowed_route(input.url)
@@ -160,10 +168,10 @@ deny["token is expired (exp)"]{
 	expired
 }
 
-deny[sprintf("token has bad audience (aud): %s not in %+v",[input.host,payload.aud])]{
-	[header, payload, _] := io.jwt.decode(input.user)
-	not element_in_list(payload.aud,input.host)
-}
+#deny[sprintf("token has bad audience (aud): %s not in %+v",[input.host,payload.aud])]{
+#	[header, payload, _] := io.jwt.decode(input.user)
+#	not element_in_list(payload.aud,input.host)
+#}
 
 # allow user is admin
 allow {
