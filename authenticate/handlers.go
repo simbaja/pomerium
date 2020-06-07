@@ -67,7 +67,7 @@ func (a *Authenticate) Mount(r *mux.Router) {
 		AllowedHeaders:   []string{"*"},
 	})
 	v.Use(c.Handler)
-	v.Use(middleware.ValidateSignature(a.sharedKey))
+	//v.Use(middleware.ValidateSignature(a.sharedKey))
 	v.Use(sessions.RetrieveSession(a.sessionLoaders...))
 	v.Use(a.VerifySession)
 	v.Path("/sign_in").Handler(httputil.HandlerFunc(a.SignIn))
