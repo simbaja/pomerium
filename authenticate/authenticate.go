@@ -94,6 +94,9 @@ type Authenticate struct {
 	// provider is the interface to interacting with the identity provider (IdP)
 	provider identity.Authenticator
 
+	// token audience
+	audience string
+
 	// cacheClient is the interface for setting and getting sessions from a cache
 	cacheClient cache.Cacher
 
@@ -185,6 +188,7 @@ func New(opts config.Options) (*Authenticate, error) {
 		sessionLoaders:   []sessions.SessionLoader{qpStore, headerStore, cookieStore},
 		// IdP
 		provider: provider,
+		audience: opts.ClientID,
 		// grpc client for cache
 		cacheClient: cacheClient,
 		jwk:         &jose.JSONWebKeySet{},
