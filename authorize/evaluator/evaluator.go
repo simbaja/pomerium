@@ -40,6 +40,9 @@ type Request struct {
 	// It is an error to set this field in an HTTP client request.
 	RequestURI string `json:"request_uri,omitempty"`
 
+	Issuer   string `json:"issuer,omitempty"`
+	Audience string `json:"audience,omitempty"`
+
 	// Connection context
 	//
 	// ClientCertificate is the PEM-encoded public certificate used for the user's TLS connection.

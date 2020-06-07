@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/pomerium/pomerium/authorize/evaluator"
+	"github.com/pomerium/pomerium/config"
 	"github.com/pomerium/pomerium/internal/grpc/authorize"
 	"github.com/pomerium/pomerium/internal/httputil"
 	"github.com/pomerium/pomerium/internal/log"
@@ -28,12 +29,15 @@ func (a *Authorize) Check(ctx context.Context, in *envoy_service_auth_v2.CheckRe
 	ctx, span := trace.StartSpan(ctx, "authorize.grpc.Check")
 	defer span.End()
 
+	//get the options
+	opts := a.currentOptions.Load()
+
 	// maybe rewrite http request for forward auth
 	isForwardAuth := a.handleForwardAuth(in)
 	hreq := getHTTPRequestFromCheckRequest(in)
 
 	isNewSession := false
-	rawJWT, sessionErr := loadSession(hreq, a.currentOptions.Load(), a.currentEncoder.Load())
+	rawJWT, sessionErr := loadSession(hreq, opts, a.currentEncoder.Load())
 	if a.isExpired(rawJWT) {
 		log.Info().Msg("refreshing session")
 		if newRawJWT, err := a.refreshSession(ctx, rawJWT); err == nil {
@@ -47,7 +51,7 @@ func (a *Authorize) Check(ctx context.Context, in *envoy_service_auth_v2.CheckRe
 		}
 	}
 
-	req := getEvaluatorRequestFromCheckRequest(in, rawJWT)
+	req := getEvaluatorRequestFromCheckRequest(in, rawJWT, opts)
 	reply, err := a.pe.IsAuthorized(ctx, req)
 	if err != nil {
 		return nil, err
@@ -215,7 +219,7 @@ func (a *Authorize) handleForwardAuth(req *envoy_service_auth_v2.CheckRequest) b
 }
 */
 
-func getEvaluatorRequestFromCheckRequest(in *envoy_service_auth_v2.CheckRequest, rawJWT []byte) *evaluator.Request {
+func getEvaluatorRequestFromCheckRequest(in *envoy_service_auth_v2.CheckRequest, rawJWT []byte, opts config.Options) *evaluator.Request {
 	requestURL := getCheckRequestURL(in)
 	req := &evaluator.Request{
 		User:              string(rawJWT),
@@ -225,6 +229,8 @@ func getEvaluatorRequestFromCheckRequest(in *envoy_service_auth_v2.CheckRequest,
 		RequestURI:        requestURL.String(),
 		URL:               requestURL.String(),
 		ClientCertificate: getPeerCertificate(in),
+		Issuer:            opts.AuthenticateURL.Host,
+		Audience:          opts.ClientID,
 	}
 	return req
 }
