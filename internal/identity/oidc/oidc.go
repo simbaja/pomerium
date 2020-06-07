@@ -24,6 +24,7 @@ import (
 const Name = "oidc"
 
 var defaultScopes = []string{go_oidc.ScopeOpenID, "profile", "email", "offline_access"}
+var defaultEndSessionRedirectParam = "post_logout_redirect_uri"
 
 // Provider provides a standard, OpenID Connect implementation
 // of an authorization identity provider.
@@ -46,6 +47,9 @@ type Provider struct {
 	// https://openid.net/specs/openid-connect-frontchannel-1_0.html#RPInitiated
 	EndSessionURL string `json:"end_session_endpoint,omitempty"`
 
+	//the redirect parameter name
+	EndSessionRedirectParam string `json:"end_session_redirect_param,omitempty"`
+
 	// UserGroupFn is, if set, used to return a slice of group IDs the
 	// user is a member of
 	UserGroupFn func(context.Context, *oauth2.Token, interface{}) error
@@ -60,6 +64,9 @@ func New(ctx context.Context, o *oauth.Options) (*Provider, error) {
 	}
 	if len(o.Scopes) == 0 {
 		o.Scopes = defaultScopes
+	}
+	if o.EndSessionRedirectParam == "" {
+		o.EndSessionRedirectParam = defaultEndSessionRedirectParam
 	}
 	p.Provider, err = go_oidc.NewProvider(ctx, o.ProviderURL)
 	if err != nil {
@@ -214,11 +221,12 @@ func (p *Provider) Revoke(ctx context.Context, t *oauth2.Token) error {
 // LogOut returns the EndSessionURL endpoint to allow a logout
 // session to be initiated.
 // https://openid.net/specs/openid-connect-frontchannel-1_0.html#RPInitiated
-func (p *Provider) LogOut() (*url.URL, error) {
+func (p *Provider) LogOut() (*url.URL, string, error) {
 	if p.EndSessionURL == "" {
-		return nil, ErrSignoutNotImplemented
+		return nil, "", ErrSignoutNotImplemented
 	}
-	return urlutil.ParseAndValidateURL(p.EndSessionURL)
+	u, err := urlutil.ParseAndValidateURL(p.EndSessionURL)
+	return u, p.EndSessionRedirectParam, err
 }
 
 // GetSubject gets the RFC 7519 Subject claim (`sub`) from a

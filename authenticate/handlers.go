@@ -61,7 +61,10 @@ func (a *Authenticate) Mount(r *mux.Router) {
 			//	log.FromRequest(r).Info().Err(err).Msg("authenticate: origin blocked")
 			//}
 			//return err == nil
-			return true;
+			//just allow all CORS requests... not sure what validating a request URL such
+			//that it's signed will do for us.  It should be checking origins, but for
+			//my use case, I do this elsewhere.
+			return true
 		},
 		AllowCredentials: true,
 		AllowedHeaders:   []string{"*"},
@@ -190,7 +193,7 @@ func (a *Authenticate) RobotsTxt(w http.ResponseWriter, r *http.Request) {
 
 // SignIn handles authenticating a user.
 func (a *Authenticate) SignIn(w http.ResponseWriter, r *http.Request) error {
-	ctx, span := trace.StartSpan(r.Context(), "authenticate.SignOut")
+	ctx, span := trace.StartSpan(r.Context(), "authenticate.SignIn")
 	defer span.End()
 
 	redirectURL, err := urlutil.ParseAndValidateURL(r.FormValue(urlutil.QueryRedirectURI))
@@ -198,7 +201,7 @@ func (a *Authenticate) SignIn(w http.ResponseWriter, r *http.Request) error {
 		return httputil.NewError(http.StatusBadRequest, err)
 	}
 
-	jwtAudience := []string{a.RedirectURL.Host, redirectURL.Host}
+	jwtAudience := []string{a.audience}
 
 	var callbackURL *url.URL
 	// if the callback is explicitly set, set it and add an additional audience
@@ -207,7 +210,7 @@ func (a *Authenticate) SignIn(w http.ResponseWriter, r *http.Request) error {
 		if err != nil {
 			return httputil.NewError(http.StatusBadRequest, err)
 		}
-		jwtAudience = append(jwtAudience, callbackURL.Host)
+		//jwtAudience = append(jwtAudience, callbackURL.Host)
 	} else {
 		// otherwise, assume callback is the same host as redirect
 		callbackURL, _ = urlutil.DeepCopy(redirectURL)
@@ -216,9 +219,9 @@ func (a *Authenticate) SignIn(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	// add an additional claim for the forward-auth host, if set
-	if fwdAuth := r.FormValue(urlutil.QueryForwardAuth); fwdAuth != "" {
-		jwtAudience = append(jwtAudience, fwdAuth)
-	}
+	//if fwdAuth := r.FormValue(urlutil.QueryForwardAuth); fwdAuth != "" {
+	//	jwtAudience = append(jwtAudience, fwdAuth)
+	//}
 
 	s, err := a.getSessionFromCtx(ctx)
 	if err != nil {
@@ -285,10 +288,10 @@ func (a *Authenticate) SignOut(w http.ResponseWriter, r *http.Request) error {
 	// no matter what happens, we want to clear the session store
 	a.sessionStore.ClearSession(w, r)
 	redirectString := r.FormValue(urlutil.QueryRedirectURI)
-	endSessionURL, err := a.provider.LogOut()
+	endSessionURL, endSessionRedirectParam, err := a.provider.LogOut()
 	if err == nil {
 		params := url.Values{}
-		params.Add("post_logout_redirect_uri", redirectString)
+		params.Add(endSessionRedirectParam, redirectString)
 		endSessionURL.RawQuery = params.Encode()
 		redirectString = endSessionURL.String()
 	} else if !errors.Is(err, oidc.ErrSignoutNotImplemented) {

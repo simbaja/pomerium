@@ -168,10 +168,10 @@ deny["token is expired (exp)"]{
 	expired
 }
 
-#deny[sprintf("token has bad audience (aud): %s not in %+v",[input.host,payload.aud])]{
-#	[header, payload, _] := io.jwt.decode(input.user)
-#	not element_in_list(payload.aud,input.host)
-#}
+deny[sprintf("token has bad audience (aud): %s not in %+v",[input.audience,payload.aud])]{
+	[header, payload, _] := io.jwt.decode(input.user)
+	not element_in_list(payload.aud,input.audience)
+}
 
 # allow user is admin
 allow {
@@ -192,7 +192,8 @@ token = {"payload": payload, "valid": valid} {
 	[valid, header, payload] := io.jwt.decode_verify(
 		input.user, {
 			"secret": shared_key,
-			"aud": input.host,
+			"iss": input.issuer,
+			"aud": input.audience,
 		}
 	)
 }
