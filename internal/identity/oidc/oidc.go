@@ -82,6 +82,9 @@ func New(ctx context.Context, o *oauth.Options) (*Provider, error) {
 		RedirectURL:  o.RedirectURL.String(),
 	}
 
+	//set the redirect parameter
+	p.EndSessionRedirectParam = o.EndSessionRedirectParam
+
 	// add non-standard claims like end-session, revoke, and user info
 	if err := p.Provider.Claims(&p); err != nil {
 		return nil, fmt.Errorf("identity/oidc: could not retrieve additional claims: %w", err)

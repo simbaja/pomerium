@@ -4,13 +4,13 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/http"
-	"net/url"
 
 	"github.com/gorilla/mux"
 	"github.com/pomerium/csrf"
 
 	"github.com/pomerium/pomerium/internal/cryptutil"
 	"github.com/pomerium/pomerium/internal/httputil"
+	"github.com/pomerium/pomerium/internal/log"
 	"github.com/pomerium/pomerium/internal/middleware"
 	"github.com/pomerium/pomerium/internal/sessions"
 	"github.com/pomerium/pomerium/internal/urlutil"
@@ -34,6 +34,7 @@ func (p *Proxy) registerDashboardHandlers(r *mux.Router) *mux.Router {
 	// dashboard endpoints can be used by user's to view, or modify their session
 	h.Path("/").Handler(httputil.HandlerFunc(p.UserDashboard)).Methods(http.MethodGet)
 	h.Path("/sign_out").HandlerFunc(p.SignOut).Methods(http.MethodGet, http.MethodPost)
+	h.Path("/signed_out").Handler(httputil.HandlerFunc(p.SignedOut)).Methods(http.MethodGet)
 	// admin endpoints authorization is also delegated to authorizer service
 	admin := h.PathPrefix("/admin").Subrouter()
 	admin.Path("/impersonate").Handler(httputil.HandlerFunc(p.Impersonate)).Methods(http.MethodPost)
@@ -71,10 +72,11 @@ func (p *Proxy) RobotsTxt(w http.ResponseWriter, _ *http.Request) {
 // of the authenticate service to revoke the remote session and clear
 // the local session state.
 func (p *Proxy) SignOut(w http.ResponseWriter, r *http.Request) {
-	redirectURL := &url.URL{Scheme: "https", Host: r.Host, Path: "/"}
+	redirectURL, _ := urlutil.DeepCopy(p.authenticateSignedoutURL)
 	if uri, err := urlutil.ParseAndValidateURL(r.FormValue(urlutil.QueryRedirectURI)); err == nil && uri.String() != "" {
 		redirectURL = uri
 	}
+	log.Info().Msg("Redirecting to + '" + redirectURL.String() + "' after signout...")
 
 	signoutURL := *p.authenticateSignoutURL
 	q := signoutURL.Query()
@@ -105,6 +107,14 @@ func (p *Proxy) UserDashboard(w http.ResponseWriter, r *http.Request) error {
 		"ImpersonateAction": urlutil.QueryImpersonateAction,
 		"ImpersonateEmail":  urlutil.QueryImpersonateEmail,
 		"ImpersonateGroups": urlutil.QueryImpersonateGroups,
+	})
+	return nil
+}
+
+// SignedOut lets gives a defined uri for signout
+func (p *Proxy) SignedOut(w http.ResponseWriter, r *http.Request) error {
+	p.templates.ExecuteTemplate(w, "signedOut.html", map[string]interface{}{
+		"BaseUrl": p.authenticateURL.String()
 	})
 	return nil
 }
