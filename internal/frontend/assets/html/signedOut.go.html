@@ -1,0 +1,37 @@
+{{define "dashboard.html"}}
+<!DOCTYPE html>
+<html lang="en" charset="utf-8">
+  <head>
+    <title>Pomerium - Signed Out</title>
+    {{template "header.html"}}
+  </head>
+
+  <body>
+    <div id="main">
+      <div id="info-box">
+        <div class="card">
+          <div class="card-header">
+            <img
+              class="icon"
+              src="{{dataURL "/.pomerium/assets/img/pomerium_circle_96.svg"}}"
+              xmlns="http://www.w3.org/2000/svg"
+            />
+            <h2>Signed Out</h2>
+          </div>
+          <section>
+            <div class="message">
+              You should close all browser windows to ensure all session-related cookies are cleared.
+            </div>
+          </section>
+          <div class="card-footer">
+            <div class="text-right text-muted small">
+              {{.RequestID}} <br />
+              Pomerium {{.Version}}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
+{{end}}

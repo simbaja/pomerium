@@ -38,7 +38,8 @@ func (e *HTTPError) Unwrap() error { return e.Err }
 
 // Debugable reports whether this error represents a user debuggable error.
 func (e *HTTPError) Debugable() bool {
-	return e.Status == http.StatusUnauthorized || e.Status == http.StatusForbidden
+	//return e.Status == http.StatusUnauthorized || e.Status == http.StatusForbidden
+	return false
 }
 
 // RetryURL returns the requests intended destination, if any.
