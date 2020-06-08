@@ -14,6 +14,7 @@ import (
 	"github.com/pomerium/pomerium/internal/middleware"
 	"github.com/pomerium/pomerium/internal/sessions"
 	"github.com/pomerium/pomerium/internal/urlutil"
+	"github.com/pomerium/pomerium/internal/version"
 )
 
 // registerDashboardHandlers returns the proxy service's ServeMux
@@ -114,6 +115,7 @@ func (p *Proxy) UserDashboard(w http.ResponseWriter, r *http.Request) error {
 // SignedOut lets gives a defined uri for signout
 func (p *Proxy) SignedOut(w http.ResponseWriter, r *http.Request) error {
 	p.templates.ExecuteTemplate(w, "signedOut.html", map[string]interface{}{
+		"Version": version.FullVersion()
 		"BaseUrl": p.authenticateURL.String(),
 	})
 	return nil
