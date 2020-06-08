@@ -53,7 +53,7 @@ func (a *Authenticate) Mount(r *mux.Router) {
 	r.Path("/oauth2/callback").Handler(httputil.HandlerFunc(a.OAuthCallback)).Methods(http.MethodGet)
 
 	// Proxy service endpoints
-	v := r.PathPrefix("/.pomerium").Subrouter()
+	v := r.PathPrefix("/.pomerium/auth").Subrouter()
 	c := cors.New(cors.Options{
 		AllowOriginRequestFunc: func(r *http.Request, _ string) bool {
 			//err := middleware.ValidateRequestURL(r, a.sharedKey)

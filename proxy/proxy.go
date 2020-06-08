@@ -36,10 +36,10 @@ import (
 const (
 	// authenticate urls
 	dashboardURL = "/.pomerium"
-	signinURL    = "/.pomerium/sign_in"
-	signoutURL   = "/.pomerium/sign_out"
-	signedoutURL = "/.pomerium/signed_out"
-	refreshURL   = "/.pomerium/refresh"
+	signinURL    = "/.pomerium/auth/sign_in"
+	signoutURL   = "/.pomerium/auth/sign_out"
+	signedoutURL = "/.pomerium/auth/signed_out"
+	refreshURL   = "/.pomerium/auth/refresh"
 )
 
 // ValidateOptions checks that proper configuration settings are set to create
@@ -69,12 +69,11 @@ type Proxy struct {
 	SharedKey    string
 	sharedCipher cipher.AEAD
 
-	authorizeURL             *url.URL
-	authenticateURL          *url.URL
-	authenticateSigninURL    *url.URL
-	authenticateSignoutURL   *url.URL
-	authenticateSignedoutURL *url.URL
-	authenticateRefreshURL   *url.URL
+	authorizeURL           *url.URL
+	authenticateURL        *url.URL
+	authenticateSigninURL  *url.URL
+	authenticateSignoutURL *url.URL
+	authenticateRefreshURL *url.URL
 
 	encoder         encoding.Unmarshaler
 	cookieOptions   *cookie.Options
@@ -140,7 +139,6 @@ func New(opts config.Options) (*Proxy, error) {
 	p.authenticateURL, _ = urlutil.DeepCopy(opts.AuthenticateURL)
 	p.authenticateSigninURL = p.authenticateURL.ResolveReference(&url.URL{Path: signinURL})
 	p.authenticateSignoutURL = p.authenticateURL.ResolveReference(&url.URL{Path: signoutURL})
-	p.authenticateSignedoutURL = p.authenticateURL.ResolveReference(&url.URL{Path: signedoutURL})
 	p.authenticateRefreshURL = p.authenticateURL.ResolveReference(&url.URL{Path: refreshURL})
 
 	authzConn, err := grpc.NewGRPCClientConn(&grpc.Options{
