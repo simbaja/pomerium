@@ -114,7 +114,7 @@ func (p *Proxy) UserDashboard(w http.ResponseWriter, r *http.Request) error {
 // SignedOut lets gives a defined uri for signout
 func (p *Proxy) SignedOut(w http.ResponseWriter, r *http.Request) error {
 	p.templates.ExecuteTemplate(w, "signedOut.html", map[string]interface{}{
-		"BaseUrl": p.authenticateURL.String()
+		"BaseUrl": p.authenticateURL.String(),
 	})
 	return nil
 }
