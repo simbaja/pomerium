@@ -34,11 +34,14 @@ func (p *Proxy) registerDashboardHandlers(r *mux.Router) *mux.Router {
 	))
 	// dashboard endpoints can be used by user's to view, or modify their session
 	h.Path("/").Handler(httputil.HandlerFunc(p.UserDashboard)).Methods(http.MethodGet)
-	h.Path("/sign_out").HandlerFunc(p.SignOut).Methods(http.MethodGet, http.MethodPost)
 	h.Path("/signed_out").Handler(httputil.HandlerFunc(p.SignedOut)).Methods(http.MethodGet)
 	// admin endpoints authorization is also delegated to authorizer service
 	admin := h.PathPrefix("/admin").Subrouter()
 	admin.Path("/impersonate").Handler(httputil.HandlerFunc(p.Impersonate)).Methods(http.MethodPost)
+
+	so := r.PathPrefix(dashboardURL).Subrouter()
+	so.Use(middleware.SetHeaders(httputil.HeadersContentSecurityPolicy))
+	so.Path("/sign_out").HandlerFunc(p.SignOut).Methods(http.MethodGet, http.MethodPost)
 
 	// Authenticate service callback handlers and middleware
 	// callback used to set route-scoped session and redirect back to destination
