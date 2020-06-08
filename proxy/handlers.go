@@ -76,7 +76,11 @@ func (p *Proxy) RobotsTxt(w http.ResponseWriter, _ *http.Request) {
 // of the authenticate service to revoke the remote session and clear
 // the local session state.
 func (p *Proxy) SignOut(w http.ResponseWriter, r *http.Request) {
-	redirectURL, _ := urlutil.DeepCopy(p.authenticateSignedoutURL)
+
+	//by default, redirect to the signed out page
+	redirectURL := urlutil.GetAbsoluteURL(r)
+	redirectURL.Path = dashboardURL + "/signed_out"
+
 	if uri, err := urlutil.ParseAndValidateURL(r.FormValue(urlutil.QueryRedirectURI)); err == nil && uri.String() != "" {
 		redirectURL = uri
 	}
