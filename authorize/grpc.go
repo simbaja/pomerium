@@ -33,7 +33,7 @@ func (a *Authorize) Check(ctx context.Context, in *envoy_service_auth_v2.CheckRe
 	opts := a.currentOptions.Load()
 
 	// maybe rewrite http request for forward auth
-	isForwardAuth := a.handleForwardAuth(in)
+	isForwardAuth := a.handleForwardAuth(in) || a.isForwardAuth()
 	hreq := getHTTPRequestFromCheckRequest(in)
 
 	isNewSession := false
@@ -161,6 +161,11 @@ func (a *Authorize) isExpired(rawSession []byte) bool {
 	state := sessions.State{}
 	err := a.currentEncoder.Load().Unmarshal(rawSession, &state)
 	return err == nil && state.IsExpired()
+}
+
+func (a *Authorize) isForwardAuth() bool {
+	opts := a.currentOptions.Load()
+	return opts.ForwardAuthURL != nil
 }
 
 func (a *Authorize) handleForwardAuth(req *envoy_service_auth_v2.CheckRequest) bool {
