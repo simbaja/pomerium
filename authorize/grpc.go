@@ -37,8 +37,8 @@ func (a *Authorize) Check(ctx context.Context, in *envoy_service_auth_v2.CheckRe
 	isForwardAuth := a.handleForwardAuth(in) || a.isForwardAuth()
 	hreq := getHTTPRequestFromCheckRequest(in)
 
-	log.Debug().Msg("isForwardAuth: " + strconv.FormatBool(isForwardAuth))
-	log.Debug().Msg("ForwardAuthURL: " + opts.ForwardAuthURL.String())
+	log.Debug().Msg("authorize: check: isForwardAuth: " + strconv.FormatBool(isForwardAuth))
+	log.Debug().Msg("authorize: check: ForwardAuthURL: " + opts.ForwardAuthURL.String())
 
 	isNewSession := false
 	rawJWT, sessionErr := loadSession(hreq, opts, a.currentEncoder.Load())
@@ -64,6 +64,8 @@ func (a *Authorize) Check(ctx context.Context, in *envoy_service_auth_v2.CheckRe
 
 	switch {
 	case reply.GetHttpStatus().GetCode() > 0 && reply.GetHttpStatus().GetCode() != http.StatusOK:
+		log.Debug().Msg("authorize: check: custom code path" + strconv.FormatInt(reply.GetHttpStatus().GetCode()))
+
 		// custom error from the IsAuthorized call
 		return a.deniedResponse(in,
 			reply.GetHttpStatus().GetCode(),
@@ -72,6 +74,8 @@ func (a *Authorize) Check(ctx context.Context, in *envoy_service_auth_v2.CheckRe
 		), nil
 
 	case reply.Allow:
+		log.Debug().Msg("authorize: check: happy path")
+
 		// ok!
 		return a.okResponse(reply, rawJWT, isNewSession), nil
 
@@ -82,15 +86,21 @@ func (a *Authorize) Check(ctx context.Context, in *envoy_service_auth_v2.CheckRe
 		errors.Is(sessionErr, sessions.ErrNoSessionFound),
 		errors.Is(sessionErr, sessions.ErrNotValidYet):
 		// redirect to login
+		log.Debug().Msg("authorize: check: session issue")
+		log.Debug().Err(sessionErr).Msg("authorize: check: session error")
+		log.Debug().Msg("authorize: check: auth response: " + strconv.FormatBool(reply.SessionExpired))
 
 		// no redirect for forward auth, that's handled by a separate config setting
 		if isForwardAuth {
+			log.Debug().Msg("authorize: check: forward auth path")
 			return a.deniedResponse(in, http.StatusUnauthorized, "Unauthenticated", nil), nil
 		}
 
+		log.Debug().Msg("authorize: check: redirect to login path")
 		return a.redirectResponse(in), nil
 
 	default:
+		log.Debug().Msg("authorize: check: default path")
 		// all other errors
 		var msg string
 		if sessionErr != nil {
