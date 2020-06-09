@@ -38,7 +38,7 @@ func (a *Authorize) Check(ctx context.Context, in *envoy_service_auth_v2.CheckRe
 	hreq := getHTTPRequestFromCheckRequest(in)
 
 	log.Debug().Msg("isForwardAuth: " + strconv.FormatBool(isForwardAuth))
-	log.Debug().Msg("ForwardAuthURL: " + ForwardAuthURL.String())
+	log.Debug().Msg("ForwardAuthURL: " + opts.ForwardAuthURL.String())
 
 	isNewSession := false
 	rawJWT, sessionErr := loadSession(hreq, opts, a.currentEncoder.Load())
