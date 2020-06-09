@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/pomerium/pomerium/authorize/evaluator"
@@ -36,7 +37,7 @@ func (a *Authorize) Check(ctx context.Context, in *envoy_service_auth_v2.CheckRe
 	isForwardAuth := a.handleForwardAuth(in) || a.isForwardAuth()
 	hreq := getHTTPRequestFromCheckRequest(in)
 
-	log.Debug().Msg("isForwardAuth: " + isForwardAuth.String())
+	log.Debug().Msg("isForwardAuth: " + strconv.FormatBool(isForwardAuth))
 	log.Debug().Msg("ForwardAuthURL: " + ForwardAuthURL.String())
 
 	isNewSession := false
