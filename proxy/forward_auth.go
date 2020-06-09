@@ -119,21 +119,27 @@ func (p *Proxy) Verify(verifyOnly bool) http.Handler {
 		}
 
 		original := p.getOriginalRequest(r, uri)
-		authorized, err := p.isAuthorized(w, original)
+		authCode, err := p.isAuthorized(w, original)
 		if err != nil {
 			return httputil.NewError(http.StatusBadRequest, err)
 		}
 
-		if authorized {
+		if authCode == http.StatusOK {
 			w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 			w.WriteHeader(http.StatusOK)
 			fmt.Fprintf(w, "Access to %s is allowed.", uri.Host)
 			return nil
 		}
 
+		//if unauthorized (somehow), clear the session here too
+		if authCode == http.StatusUnauthorized {
+			p.sessionStore.ClearSession(w, r)
+		}
+
+		//if we have a session, and we didn't return unauthorized, return access denied
 		_, err = sessions.FromContext(r.Context())
 		hasSession := err == nil
-		if hasSession {
+		if hasSession && authCode != http.StatusUnauthorized {
 			return httputil.NewError(http.StatusForbidden, errors.New("access denied"))
 		}
 
