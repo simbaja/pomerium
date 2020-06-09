@@ -64,7 +64,7 @@ func (a *Authorize) Check(ctx context.Context, in *envoy_service_auth_v2.CheckRe
 
 	switch {
 	case reply.GetHttpStatus().GetCode() > 0 && reply.GetHttpStatus().GetCode() != http.StatusOK:
-		log.Debug().Msg("authorize: check: custom code path" + strconv.FormatInt(reply.GetHttpStatus().GetCode(), 10))
+		log.Debug().Msg(fmt.Sprintf("authorize: check: custom code path %d", reply.GetHttpStatus().GetCode()))
 
 		// custom error from the IsAuthorized call
 		return a.deniedResponse(in,
