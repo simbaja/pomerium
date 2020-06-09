@@ -19,10 +19,10 @@ import (
 
 // registerDashboardHandlers returns the proxy service's ServeMux
 func (p *Proxy) registerDashboardHandlers(r *mux.Router) *mux.Router {
-	r.Path(dashboardURL+"/sign_out").
-		Name("signout").
-		HandlerFunc(p.SignOut).
-		Methods(http.MethodGet, http.MethodPost)
+
+	so := r.PathPrefix(dashboardURL).Subrouter()
+	so.Use(middleware.SetHeaders(httputil.HeadersContentSecurityPolicy))
+	so.Path("/signed_out").Handler(httputil.HandlerFunc(p.SignedOut)).Methods(http.MethodGet)
 
 	h := r.PathPrefix(dashboardURL).Subrouter()
 	h.Use(middleware.SetHeaders(httputil.HeadersContentSecurityPolicy))
@@ -39,7 +39,7 @@ func (p *Proxy) registerDashboardHandlers(r *mux.Router) *mux.Router {
 	))
 	// dashboard endpoints can be used by user's to view, or modify their session
 	h.Path("/").Handler(httputil.HandlerFunc(p.UserDashboard)).Methods(http.MethodGet)
-	h.Path("/signed_out").Handler(httputil.HandlerFunc(p.SignedOut)).Methods(http.MethodGet)
+	h.Path(dashboardURL+"/sign_out").HandlerFunc(p.SignOut).Methods(http.MethodGet, http.MethodPost)
 	// admin endpoints authorization is also delegated to authorizer service
 	admin := h.PathPrefix("/admin").Subrouter()
 	admin.Path("/impersonate").Handler(httputil.HandlerFunc(p.Impersonate)).Methods(http.MethodPost)
