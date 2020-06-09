@@ -133,7 +133,7 @@ func (a *Authorize) refreshSession(ctx context.Context, rawJWT []byte) (newSessi
 	options := a.currentOptions.Load()
 
 	// 1 - build a signed url to call refresh on authenticate service
-	refreshURI := options.GetAuthenticateURL().ResolveReference(&url.URL{Path: "/.pomerium/refresh"})
+	refreshURI := options.GetAuthenticateURL().ResolveReference(&url.URL{Path: "/.pomerium/auth/refresh"})
 	signedRefreshURL := urlutil.NewSignedURL(options.SharedKey, refreshURI).String()
 
 	// 2 - http call to authenticate service
