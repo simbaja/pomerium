@@ -36,6 +36,9 @@ func (a *Authorize) Check(ctx context.Context, in *envoy_service_auth_v2.CheckRe
 	isForwardAuth := a.handleForwardAuth(in) || a.isForwardAuth()
 	hreq := getHTTPRequestFromCheckRequest(in)
 
+	log.Debug().Msg("isForwardAuth: " + isForwardAuth.String())
+	log.Debug().Msg("ForwardAuthURL: " + ForwardAuthURL.String())
+
 	isNewSession := false
 	rawJWT, sessionErr := loadSession(hreq, opts, a.currentEncoder.Load())
 	if a.isExpired(rawJWT) {
@@ -350,6 +353,7 @@ func logAuthorizeCheck(
 	evt = evt.Bool("allow", reply.GetAllow())
 	evt = evt.Bool("session-expired", reply.GetSessionExpired())
 	evt = evt.Strs("deny-reasons", reply.GetDenyReasons())
+	evt = evt.Str("user", reply.GetUser())
 	evt = evt.Str("email", reply.GetEmail())
 	evt = evt.Strs("groups", reply.GetGroups())
 	if rawJWT != nil {
