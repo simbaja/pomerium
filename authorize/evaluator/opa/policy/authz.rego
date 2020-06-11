@@ -33,6 +33,14 @@ allow {
 	count(deny)==0
 }
 
+# allow by user
+allow {
+	route := first_allowed_route(input.url)
+	token.payload.user = route_policies[route].allowed_users[_]
+	token.valid
+	count(deny)==0
+}
+
 # allow group
 allow {
 	route := first_allowed_route(input.url)
